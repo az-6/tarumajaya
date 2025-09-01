@@ -3,11 +3,24 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-// Create client with fallback handling
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Missing Supabase environment variables:", {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey,
+  });
+}
+
+// Create client with error handling
 export const supabase =
   supabaseUrl && supabaseAnonKey
     ? createClient(supabaseUrl, supabaseAnonKey)
     : null;
+
+// Helper function to check if Supabase is available
+export const isSupabaseAvailable = (): boolean => {
+  return supabase !== null;
+};
 
 // For server-side admin operations only (API routes, server components)
 export const createAdminClient = () => {

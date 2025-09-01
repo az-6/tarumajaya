@@ -1,4 +1,5 @@
-import { supabase } from "./supabase";
+import { supabase, isSupabaseAvailable } from "./supabase";
+import { fallbackUmkmData } from "./fallback-data";
 import {
   uploadImage,
   uploadImages,
@@ -66,7 +67,12 @@ export const toIDRCurrency = (v: number): string =>
 // Get all UMKM
 export async function getAllUmkm(): Promise<UmkmData[]> {
   try {
-    const { data, error } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, using fallback data");
+      return fallbackUmkmData;
+    }
+
+    const { data, error } = await supabase!
       .from("umkm")
       .select(
         `
@@ -78,20 +84,25 @@ export async function getAllUmkm(): Promise<UmkmData[]> {
 
     if (error) {
       console.error("Error fetching UMKM:", error);
-      throw error;
+      return fallbackUmkmData;
     }
 
     return data || [];
   } catch (error) {
     console.error("Error in getAllUmkm:", error);
-    return [];
+    return fallbackUmkmData;
   }
 }
 
 // Get UMKM by slug
 export async function getUmkmBySlug(slug: string): Promise<UmkmData | null> {
   try {
-    const { data, error } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, using fallback data");
+      return fallbackUmkmData.find((umkm) => umkm.slug === slug) || null;
+    }
+
+    const { data, error } = await supabase!
       .from("umkm")
       .select(
         `
@@ -120,7 +131,12 @@ export async function getUmkmBySlug(slug: string): Promise<UmkmData | null> {
 // Get UMKM by ID
 export async function getUmkmById(id: string): Promise<UmkmData | null> {
   try {
-    const { data, error } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, returning null");
+      return null;
+    }
+
+    const { data, error } = await supabase!
       .from("umkm")
       .select(
         `
@@ -178,10 +194,15 @@ export async function createUmkm(umkmData: {
   }>;
 }): Promise<UmkmData | null> {
   try {
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, cannot create UMKM");
+      throw new Error("Database tidak tersedia");
+    }
+
     const slug = slugify(umkmData.name);
 
     // Check if slug already exists
-    const { data: existingUmkm } = await supabase
+    const { data: existingUmkm } = await supabase!
       .from("umkm")
       .select("id")
       .eq("slug", slug)
@@ -210,7 +231,7 @@ export async function createUmkm(umkmData: {
       products: umkmData.products || [],
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from("umkm")
       .insert(insertData)
       .select("*")
@@ -255,7 +276,7 @@ export async function createUmkm(umkmData: {
 
     // Update UMKM with uploaded image URLs if any
     if (needsUpdate) {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabase!
         .from("umkm")
         .update({
           logo: finalLogoUrl,
@@ -269,7 +290,7 @@ export async function createUmkm(umkmData: {
     }
 
     // Fetch complete data with category
-    const { data: completeData } = await supabase
+    const { data: completeData } = await supabase!
       .from("umkm")
       .select(
         `
@@ -322,10 +343,15 @@ export async function updateUmkm(
   }>
 ): Promise<UmkmData | null> {
   try {
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, cannot update UMKM");
+      throw new Error("Database tidak tersedia");
+    }
+
     console.log("updateUmkm called with:", { id, updates });
 
     // Get existing UMKM data for cleanup comparison
-    const { data: existingData } = await supabase
+    const { data: existingData } = await supabase!
       .from("umkm")
       .select("images")
       .eq("id", id)
@@ -415,7 +441,7 @@ export async function updateUmkm(
       textData.slug = slugify(updates.name);
 
       // Check if new slug conflicts with existing UMKM
-      const { data: existingUmkm } = await supabase
+      const { data: existingUmkm } = await supabase!
         .from("umkm")
         .select("id")
         .eq("slug", textData.slug)
@@ -429,7 +455,7 @@ export async function updateUmkm(
 
     console.log("Final data to update:", Object.keys(textData));
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from("umkm")
       .update(textData)
       .eq("id", id)
@@ -464,10 +490,15 @@ export async function updateUmkm(
 // Delete UMKM
 export async function deleteUmkm(id: string): Promise<boolean> {
   try {
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, cannot delete UMKM");
+      return false;
+    }
+
     // Delete all images from storage first
     await deleteAllUmkmImages(id);
 
-    const { error } = await supabase.from("umkm").delete().eq("id", id);
+    const { error } = await supabase!.from("umkm").delete().eq("id", id);
 
     if (error) {
       console.error("Error deleting UMKM:", error);
@@ -484,7 +515,16 @@ export async function deleteUmkm(id: string): Promise<boolean> {
 // Get UMKM statistics
 export async function getUmkmStats() {
   try {
-    const { data: allUmkm, error: umkmError } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, returning default stats");
+      return {
+        total: 0,
+        featured: 0,
+        categories: 0,
+      };
+    }
+
+    const { data: allUmkm, error: umkmError } = await supabase!
       .from("umkm")
       .select("featured, category_id");
 
@@ -493,7 +533,7 @@ export async function getUmkmStats() {
       throw umkmError;
     }
 
-    const { data: categoriesCount, error: categoriesError } = await supabase
+    const { data: categoriesCount, error: categoriesError } = await supabase!
       .from("categories")
       .select("id", { count: "exact" });
 
@@ -520,7 +560,12 @@ export async function getUmkmStats() {
 // Get featured UMKM for homepage
 export async function getFeaturedUmkm(): Promise<UmkmData[]> {
   try {
-    const { data, error } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, using fallback data");
+      return fallbackUmkmData.filter((umkm) => umkm.featured).slice(0, 6);
+    }
+
+    const { data, error } = await supabase!
       .from("umkm")
       .select(
         `
@@ -534,20 +579,25 @@ export async function getFeaturedUmkm(): Promise<UmkmData[]> {
 
     if (error) {
       console.error("Error fetching featured UMKM:", error);
-      throw error;
+      return fallbackUmkmData.filter((umkm) => umkm.featured).slice(0, 6);
     }
 
     return data || [];
   } catch (error) {
     console.error("Error in getFeaturedUmkm:", error);
-    throw error;
+    return fallbackUmkmData.filter((umkm) => umkm.featured).slice(0, 6);
   }
 }
 
 // Get latest UMKM for homepage
 export async function getLatestUmkm(limit: number = 8): Promise<UmkmData[]> {
   try {
-    const { data, error } = await supabase
+    if (!isSupabaseAvailable()) {
+      console.warn("Supabase not available, using fallback data");
+      return fallbackUmkmData.slice(0, limit);
+    }
+
+    const { data, error } = await supabase!
       .from("umkm")
       .select(
         `
@@ -560,12 +610,12 @@ export async function getLatestUmkm(limit: number = 8): Promise<UmkmData[]> {
 
     if (error) {
       console.error("Error fetching latest UMKM:", error);
-      throw error;
+      return fallbackUmkmData.slice(0, limit);
     }
 
     return data || [];
   } catch (error) {
     console.error("Error in getLatestUmkm:", error);
-    throw error;
+    return fallbackUmkmData.slice(0, limit);
   }
 }

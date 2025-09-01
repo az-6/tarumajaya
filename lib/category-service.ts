@@ -1,4 +1,5 @@
-import { supabase } from "./supabase";
+import { supabase, isSupabaseAvailable } from "./supabase";
+import { fallbackCategories } from "./fallback-data";
 
 export type Category = {
   id: string;
@@ -10,7 +11,7 @@ export type Category = {
 
 // Safe wrapper for supabase operations
 function withSupabase<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
-  if (!supabase) {
+  if (!isSupabaseAvailable()) {
     console.warn("Supabase client not available, using fallback");
     return Promise.resolve(fallback);
   }
@@ -34,9 +35,9 @@ export async function getAllCategories(): Promise<Category[]> {
       return data || [];
     } catch (error) {
       console.error("Error in getAllCategories:", error);
-      return [];
+      return fallbackCategories;
     }
-  }, []);
+  }, fallbackCategories);
 }
 
 // Get category names only (for compatibility with existing code)
@@ -220,21 +221,27 @@ export async function isCategoryUsed(id: string): Promise<boolean> {
 }
 
 // Get category statistics
-export async function getCategoryStats(): Promise<{ totalCategories: number; totalUmkm: number }> {
-  return withSupabase(async () => {
-    try {
-      const [categoriesData, umkmData] = await Promise.all([
-        supabase!.from("categories").select("id", { count: "exact" }),
-        supabase!.from("umkm").select("id", { count: "exact" })
-      ]);
+export async function getCategoryStats(): Promise<{
+  totalCategories: number;
+  totalUmkm: number;
+}> {
+  return withSupabase(
+    async () => {
+      try {
+        const [categoriesData, umkmData] = await Promise.all([
+          supabase!.from("categories").select("id", { count: "exact" }),
+          supabase!.from("umkm").select("id", { count: "exact" }),
+        ]);
 
-      return {
-        totalCategories: categoriesData.count || 0,
-        totalUmkm: umkmData.count || 0
-      };
-    } catch (error) {
-      console.error("Error in getCategoryStats:", error);
-      return { totalCategories: 0, totalUmkm: 0 };
-    }
-  }, { totalCategories: 0, totalUmkm: 0 });
+        return {
+          totalCategories: categoriesData.count || 0,
+          totalUmkm: umkmData.count || 0,
+        };
+      } catch (error) {
+        console.error("Error in getCategoryStats:", error);
+        return { totalCategories: 0, totalUmkm: 0 };
+      }
+    },
+    { totalCategories: 0, totalUmkm: 0 }
+  );
 }
