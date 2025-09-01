@@ -218,3 +218,23 @@ export async function isCategoryUsed(id: string): Promise<boolean> {
     }
   }, false);
 }
+
+// Get category statistics
+export async function getCategoryStats(): Promise<{ totalCategories: number; totalUmkm: number }> {
+  return withSupabase(async () => {
+    try {
+      const [categoriesData, umkmData] = await Promise.all([
+        supabase!.from("categories").select("id", { count: "exact" }),
+        supabase!.from("umkm").select("id", { count: "exact" })
+      ]);
+
+      return {
+        totalCategories: categoriesData.count || 0,
+        totalUmkm: umkmData.count || 0
+      };
+    } catch (error) {
+      console.error("Error in getCategoryStats:", error);
+      return { totalCategories: 0, totalUmkm: 0 };
+    }
+  }, { totalCategories: 0, totalUmkm: 0 });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/site-header";
 import FilterBar, {
@@ -12,7 +12,7 @@ import { getAllUmkm } from "@/lib/umkm-service";
 import { UmkmData } from "@/lib/umkm-service";
 import { Loader2 } from "lucide-react";
 
-export default function DirectoryPage() {
+function DirectoryContent() {
   const searchParams = useSearchParams();
   const kategori = (searchParams.get("kategori") as CategoryFilter) || "Semua";
   const urut = (searchParams.get("urut") as SortOption) || "terbaru";
@@ -114,5 +114,27 @@ export default function DirectoryPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function DirectoryLoadingFallback() {
+  return (
+    <div className="min-h-screen">
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8 md:py-12">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Memuat halaman...</span>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function DirectoryPage() {
+  return (
+    <Suspense fallback={<DirectoryLoadingFallback />}>
+      <DirectoryContent />
+    </Suspense>
   );
 }
