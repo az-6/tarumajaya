@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import SiteHeader from "@/components/site-header";
 import CategoryCards from "@/components/category-cards";
 import UmkmCard from "@/components/umkm-card";
+import HeroSlider from "@/components/hero-slider";
+import ProductSlider from "@/components/product-slider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getFeaturedUmkm, getLatestUmkm, UmkmData } from "@/lib/umkm-service";
@@ -45,32 +47,26 @@ export default function HomePage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8 md:py-12">
-        {/* Hero */}
-        <section className="grid items-center gap-4 overflow-hidden rounded-2xl border bg-muted/30 p-4 sm:p-6 md:grid-cols-2 md:gap-6 md:p-8 lg:p-10">
-          <div className="order-2 space-y-4 md:order-1">
-            <h1 className="text-xl font-bold leading-tight sm:text-2xl md:text-3xl lg:text-4xl">
-              Direktori UMKM Tarumajaya
-              <span className="block text-base text-muted-foreground sm:text-lg md:text-xl">
-                Temukan, dukung, dan promosikan UMKM Desa Tarumajaya.
-              </span>
-            </h1>
-            <div className="mt-4 flex flex-wrap gap-3 md:mt-6">
-              <Link href="/umkm">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Jelajahi Direktori
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="relative order-1 aspect-[16/10] w-full md:order-2">
-            <Image
-              src="/placeholder.svg?height=420&width=720"
-              alt="Kolase produk UMKM"
-              fill
-              className="rounded-xl object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
+        {/* Hero Slider */}
+        <section className="mb-8 md:mb-12">
+          <HeroSlider />
+        </section>
+
+        {/* Welcome Section */}
+        <section className="mb-8 md:mb-12 text-center">
+          <h1 className="text-2xl font-bold leading-tight sm:text-3xl md:text-4xl lg:text-5xl mb-4">
+            Direktori UMKM Tarumajaya
+          </h1>
+          <p className="text-base text-muted-foreground sm:text-lg md:text-xl max-w-3xl mx-auto mb-6">
+            Temukan, dukung, dan promosikan UMKM Desa Tarumajaya. Platform
+            direktori terlengkap untuk mendukung ekonomi kreatif lokal.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link href="/umkm">
+              <Button size="lg" className="w-full sm:w-auto">
+                Jelajahi Direktori
+              </Button>
+            </Link>
           </div>
         </section>
 
@@ -84,17 +80,6 @@ export default function HomePage() {
 
         {/* Featured */}
         <section className="mt-8 space-y-4 md:mt-10">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold sm:text-xl md:text-2xl">
-              UMKM Unggulan
-            </h2>
-            <Link
-              href="/umkm"
-              className="text-sm text-muted-foreground hover:underline"
-            >
-              Lihat semua
-            </Link>
-          </div>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -111,16 +96,17 @@ export default function HomePage() {
               </button>
             </div>
           ) : featured.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-              {featured.map((u) => (
-                <div key={u.id} className="w-[280px] flex-none sm:w-[300px]">
-                  <UmkmCard item={u} />
-                </div>
-              ))}
-            </div>
+            <ProductSlider
+              items={featured}
+              title="UMKM Unggulan"
+              viewAllLink="/umkm"
+            />
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Belum ada UMKM unggulan
+            <div className="text-center py-8">
+              <h2 className="text-lg font-semibold sm:text-xl md:text-2xl mb-4">
+                UMKM Unggulan
+              </h2>
+              <p className="text-muted-foreground">Belum ada UMKM unggulan</p>
             </div>
           )}
         </section>
@@ -129,17 +115,6 @@ export default function HomePage() {
 
         {/* Latest */}
         <section className="space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold sm:text-xl md:text-2xl">
-              UMKM Terbaru
-            </h2>
-            <Link
-              href="/umkm?urut=terbaru"
-              className="text-sm text-muted-foreground hover:underline"
-            >
-              Lihat semua
-            </Link>
-          </div>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -156,14 +131,29 @@ export default function HomePage() {
               </button>
             </div>
           ) : latest.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {latest.map((u) => (
-                <UmkmCard key={u.id} item={u} />
-              ))}
-            </div>
+            <>
+              <ProductSlider
+                items={latest.slice(0, 6)}
+                title="UMKM Terbaru"
+                viewAllLink="/umkm?urut=terbaru"
+              />
+              {latest.length > 6 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Lainnya</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {latest.slice(6).map((u) => (
+                      <UmkmCard key={u.id} item={u} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Belum ada UMKM terdaftar
+            <div className="text-center py-8">
+              <h2 className="text-lg font-semibold sm:text-xl md:text-2xl mb-4">
+                UMKM Terbaru
+              </h2>
+              <p className="text-muted-foreground">Belum ada UMKM terdaftar</p>
             </div>
           )}
         </section>

@@ -8,7 +8,12 @@ export const metadata: Metadata = {
   description:
     "Platform direktori UMKM lokal untuk mendukung ekonomi kreatif Desa Tarumajayaa",
   generator: "Next.js",
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

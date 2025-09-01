@@ -26,9 +26,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError("");
 
-    // Simulasi validasi password (akan diisi backend nanti)
-    // Password sementara: "admin123"
-    if (password === "admin123") {
+    if (password === "Rumkm_2025") {
       // Simpan status login ke localStorage
       localStorage.setItem("adminLoggedIn", "true");
       router.push("/admin/dashboard");
@@ -92,10 +90,13 @@ export default function AdminLoginPage() {
           </form>
 
           <div className="mt-4 text-xs text-center text-muted-foreground sm:text-sm">
-            Password sementara:{" "}
-            <code className="bg-muted px-2 py-1 rounded text-xs sm:text-sm">
-              admin123
-            </code>
+            Butuh bantuan? Hubungi Tech Support:{" "}
+            <a
+              href="tel:08121450806"
+              className="text-primary hover:underline font-medium"
+            >
+              08121450806
+            </a>
           </div>
         </CardContent>
       </Card>

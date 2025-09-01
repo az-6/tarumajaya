@@ -1,9 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create client with fallback handling
+export const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
 
 // For server-side admin operations only (API routes, server components)
 export const createAdminClient = () => {
@@ -11,7 +15,17 @@ export const createAdminClient = () => {
     throw new Error("Admin client cannot be used on client-side");
   }
 
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("Supabase configuration missing, admin client unavailable");
+    return null;
+  }
+
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseServiceRoleKey) {
+    console.warn("Service role key missing, admin client unavailable");
+    return null;
+  }
+
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
