@@ -160,8 +160,8 @@ export default function HomePage() {
       </main>
       <footer className="mt-12 border-t md:mt-16">
         <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted-foreground md:py-8">
-          © {new Date().getFullYear()} Rumah UMKM Desa Tarumajaya · Dibangun
-          untuk memajukan UMKM Indonesia
+          © {new Date().getFullYear()} Rumah UMKM Desa Tarumajaya · Dibuat Oleh
+          KKN Kelompok 13 Universitas Muhammadiyah Bandung
         </div>
       </footer>
     </div>
