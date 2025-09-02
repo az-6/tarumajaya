@@ -130,16 +130,14 @@ export async function createCategory(
 // Update category
 export async function updateCategory(
   id: string,
-  name: string,
-  description?: string
+  updates: Partial<Pick<Category, "name" | "description">>
 ): Promise<Category | null> {
   return withSupabase(async () => {
     try {
       const { data, error } = await supabase!
         .from("categories")
         .update({
-          name,
-          description,
+          ...updates,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
